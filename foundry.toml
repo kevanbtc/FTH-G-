@@ -1,0 +1,10 @@
+[profile.default]
+src = 'contracts'
+out = 'out'
+libs = ['lib']
+solc = '0.8.24'
+evm_version = 'paris'
+optimizer = true
+optimizer_runs = 20000
+bytecode_hash = "none"
+ffi = false
