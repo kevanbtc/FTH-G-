@@ -7,9 +7,9 @@ import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessContr
 contract PoROracle is AccessControl {
     bytes32 public constant ATTESTOR = keccak256("ATTESTOR");
 
-    bytes32 public immutable assetKey; // e.g., keccak256("GOLD_LBMA_KG")
+    bytes32 public immutable ASSET_KEY; // e.g., keccak256("GOLD_LBMA_KG")
     uint256 private _reservesKg;
-    string public lastProofCID; // IPFS/Arweave proof doc (vault certs, bar lists, etc.)
+    string public lastProofCid; // IPFS/Arweave proof doc (vault certs, bar lists, etc.)
     uint256 public lastUpdate;
 
     event ReservesUpdated(uint256 kg, string cid);
@@ -17,12 +17,12 @@ contract PoROracle is AccessControl {
     constructor(address admin, bytes32 assetKey_) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ATTESTOR, admin);
-        assetKey = assetKey_;
+        ASSET_KEY = assetKey_;
     }
 
     function setReserves(uint256 kg, string calldata cid) external onlyRole(ATTESTOR) {
         _reservesKg = kg;
-        lastProofCID = cid;
+        lastProofCid = cid;
         lastUpdate = block.timestamp;
         emit ReservesUpdated(kg, cid);
     }
@@ -32,6 +32,6 @@ contract PoROracle is AccessControl {
     }
 
     function reservesAsset() external view returns (bytes32) {
-        return assetKey;
+        return ASSET_KEY;
     }
 }

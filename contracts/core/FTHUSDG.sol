@@ -16,8 +16,8 @@ contract FTHUSDG is ERC20, ERC20Permit, AccessControl {
     bytes32 public constant COMPLIANCE = keccak256("COMPLIANCE");
 
     IPoROracle public por;
-    bytes32 public immutable backingAsset; // e.g., keccak256("GOLD_LBMA_KG")
-    uint256 public immutable usdPerKg; // 1e6 decimals; e.g., $ value per kg * 1e6
+    bytes32 public immutable BACKING_ASSET; // e.g., keccak256("GOLD_LBMA_KG")
+    uint256 public immutable USD_PER_KG; // USD price per kg scaled to 1e6 (USD 6 decimals)
 
     mapping(address => bool) public kycOk;
 
@@ -38,9 +38,9 @@ contract FTHUSDG is ERC20, ERC20Permit, AccessControl {
         _grantRole(RESERVE_MANAGER, admin_);
         _grantRole(COMPLIANCE, admin_);
         por = IPoROracle(porOracle_);
-        backingAsset = backingAsset_;
-        usdPerKg = usdPerKg_;
-        require(por.reservesAsset() == backingAsset_, "oracle/backing mismatch");
+        BACKING_ASSET = backingAsset_;
+        USD_PER_KG = usdPerKg_;
+        require(por.reservesAsset() == BACKING_ASSET, "oracle/backing mismatch");
     }
 
     function setCompliance(address user, bool allowed) external onlyRole(COMPLIANCE) {
@@ -48,24 +48,30 @@ contract FTHUSDG is ERC20, ERC20Permit, AccessControl {
         emit ComplianceUpdated(user, allowed);
     }
 
-    function _checkKYC(address user) internal view {
+    function _checkKyc(address user) internal view {
         require(kycOk[user], "compliance/kyc");
     }
 
+    /// @dev Hard cap: totalSupply(1e6) <= totalReservesKg * USD_PER_KG(1e6)
     function _hardCap() internal view returns (uint256) {
-        return por.totalReservesInKg() * usdPerKg;
+        return por.totalReservesInKg() * USD_PER_KG;
     }
 
     function mint(address to, uint256 amount) external onlyRole(RESERVE_MANAGER) {
-        _checkKYC(to);
+        _checkKyc(to);
         require(totalSupply() + amount <= _hardCap(), "exceeds PoR cap");
         _mint(to, amount);
         emit Minted(to, amount);
     }
 
     function burn(uint256 amount) external {
-        _checkKYC(msg.sender);
+        _checkKyc(msg.sender);
         _burn(msg.sender, amount);
         emit Burned(msg.sender, amount);
+    }
+
+    /// @notice USD-like 6 decimals for intuitive amounts ($1 == 1e6)
+    function decimals() public pure override returns (uint8) {
+        return 6;
     }
 }

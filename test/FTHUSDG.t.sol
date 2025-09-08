@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {FTHUSDG} from "../contracts/core/FTHUSDG.sol";
 import {PoROracle} from "../contracts/oracles/PoROracle.sol";
 
@@ -15,7 +15,7 @@ contract FTHUSDGTest is Test {
         vm.startPrank(admin);
         por = new PoROracle(admin, GOLD);
         por.setReserves(1000, "ipfs://proof"); // 1000 kg
-        usd = new FTHUSDG("FTH-USDG", "USDG", admin, address(por), GOLD, 60000000); // $60k/kg * 1e6
+        usd = new FTHUSDG("FTH-USDG", "USDG", admin, address(por), GOLD, 60000000000000); // $60k/kg * 1e6
         usd.grantRole(usd.COMPLIANCE(), admin);
         usd.grantRole(usd.RESERVE_MANAGER(), admin);
         usd.setCompliance(address(this), true);
